@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package>
+ <name>data_augmentation</name>
+ <version>1.0.0</version>
+ <description>data augmentation</description>
+ <license>GPLv3</license>
+
+ <author email="enrico.piazza@polimi.it">Enrico Piazza</author>
+ <maintainer email="enrico.piazza@polimi.it">Enrico Piazza</maintainer>
+
+ <buildtool_depend>catkin</buildtool_depend>
+
+ <export>
+ </export>
+</package>

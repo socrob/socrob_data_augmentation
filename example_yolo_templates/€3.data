@@ -1,0 +1,5 @@
+classes = €1
+train   = SOME_DATASET_FOLDER/€3/train.txt
+valid   = SOME_DATASET_FOLDER/€3/test.txt
+names   = SOME_DATASET_FOLDER/€3/€3.names
+backup  = SOME_WEIGHTS_FOLDER/€3/

@@ -1,0 +1,19 @@
+# The name of this dataset
+dataset_name: lis_v1
+
+# Folder where the yolo generated files are saved
+yolo_files_path: ~/ds/yolo/lis_v1/yolo_files
+
+# Template for yolo's data configuration file
+data_template:  ~/ds/yolo/lis_v1/yolo_templates/€3.data
+
+# Template for yolo's testing cfg configuration file
+cfg_testing_template: ~/ds/yolo/lis_v1/yolo_templates/yolov3-€3-testing.cfg
+
+# Template for yolo's training cfg configuration file
+cfg_training_template: ~/ds/yolo/lis_v1/yolo_templates/yolov3-€3-training.cfg
+
+# The €1, €2 and €3 tokens in each template and filename are replaced with:
+# €1 with number of classes,
+# €2 with number of filters,
+# €3 with the dataset name
