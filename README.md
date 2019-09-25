@@ -1,6 +1,14 @@
 # Data Augmentation
 
  <!-- TODO  image: support surface depth image, support surface rgb image, source image, augmented image -->
+Augmented images:
+
+<p align="center">
+  <img src="/doc/img/augmented-image-0000167-erl_mk.png?raw=true" width="350" title="augmented image with ERL-MK objects">
+  <img src="/doc/img/augmented-image-0004143-erl_lis.png?raw=true" width="350" alt="augmented image with ERL-Lisbon objects">
+</p>
+
+
 
 These data augmentation tools allow to automatically generate a dataset of objects by cut-and-past.
 The objects (patches) are "cut" from source images and pasted on background images, in specific positions.
