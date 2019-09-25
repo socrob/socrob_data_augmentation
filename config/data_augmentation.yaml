@@ -1,23 +1,18 @@
 # Specifies the id corresponding to each class
 # A dictionary with class names as keys and class ids as values, or a list of class names
 class_id_dict: [
-  coke,
+  italian_biscotti,
+  innocent_smoothie,
+  innocent_magnificent_mango,
+  tyrrells_crisps,
   water,
-  milkshake,
-  juice,
-  tea,
-  apple,
-  lemon,
-  pear,
-  rice,
-  macaroni,
-  cookies,
-  cloth,
-  toilet_paper,
-  sponge,
-  soap,
-  cup,
-  bowl
+  roast_chicken_salad_sandwich,
+  ham_and_cheese_toastie,
+  veggie_breakfast_pot,
+  british_breakfast_wrap,
+  small_cup,
+  medium_cup,
+  large_cup
 ]
 
 # Number of generated augmented images
@@ -29,6 +24,10 @@ max_masks_per_image: 4
 # Patches with similar elevation are added to an augmented image,
 # the elevation is bucketed with this value (radians)
 elevation_bucket_size: 0.025
+
+# Patches are only extracted from source images and pasted onto background images if the distance
+# is smaller than this value [meters].
+max_distance: 1.5
 
 # When finding a random position for an object in the augmented image,
 # this is the maximum number of attempts before giving up
@@ -44,10 +43,10 @@ background_images_choice: sequential
 load_pickled_patches: False
 
 # Folder containing the background images (as pickled support_surface_object's)
-background_images_path: ~/ds/yolo/lis_v1/background_images
+background_images_path: ~/ds/ext/yolo/mk_v1/background_images
 
 # Folder containing the source images, yaml info and json label files, or the already pickled patches
-source_images_path: ~/ds/yolo/lis_v1/source_images
+source_images_path: ~/ds/ext/yolo/mk_v1/source_images
 
 # Folder where the augmented images and labels are saved
-augmented_images_path: ~/ds/yolo/lis_v1/augmented_images
+augmented_images_path: ~/ds/ext/yolo/mk_v1/augmented_images

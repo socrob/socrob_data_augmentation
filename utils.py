@@ -8,6 +8,7 @@ from glob import glob
 import json
 from skimage import draw
 import cv2
+from geometry_msgs.msg import Point
 
 
 def mkdir(path):
@@ -17,6 +18,24 @@ def mkdir(path):
 
 
 def get_list(base_folder, pattern='.png', *args):
+    """
+    Returns the list of paths for each image matching the pattern (postfix), starting from the base_folder path.
+    If additional args are specified, the returned list will contain tuples with the image path and additional files
+    with same prefix of the image and matching the arg postfix.
+    E.g.:
+    Given these arguments:
+     base_folder='.'
+     pattern='.png'
+     arg1='.txt'
+     arg2='.yaml'
+    And these files in the cwd: foo.png, foo.txt, foo.yaml, asd.png, asd.txt, asd.yaml, bar.png, lol.txt
+    Returned list: [('foo.png', 'foo.txt', 'foo.yaml'), ('asd.png', 'asd.txt', 'asd.yaml')]
+
+    :param base_folder: path from which images are recursively listed
+    :param pattern: postfix of the filename of the images
+    :param args: postfix of the filenames to be included in the returned list, with filenames matching the ones of the images
+    :return: list of filenames with matching patterns
+    """
     paths_list = []
 
     for path in os.walk(base_folder):
@@ -73,7 +92,7 @@ def get_mask_from_json(json_filename, image_shape, class_id_dict):
 
         class_name_original = current_dict['label_class']
         
-        # replace the spaces with undescore in label names
+        # replace the spaces with underscore in label names
         class_name = class_name_original.replace(' ', '_')
         
         if class_name in class_id_dict.keys():
@@ -141,4 +160,12 @@ def elevation(r, n):
 
 
 def distance(p):
-    return np.sqrt(p[0]**2 + p[1]**2 + p[2]**2)
+    """
+    :type p: Union[numpy.array, geometry_msgs.msg.Point]
+    """
+    if isinstance(p, np.ndarray):
+        return np.sqrt(p[0]**2 + p[1]**2 + p[2]**2)
+    elif isinstance(p, Point):
+        return np.sqrt(p.x ** 2 + p.y ** 2 + p.z ** 2)
+    else:
+        raise TypeError()

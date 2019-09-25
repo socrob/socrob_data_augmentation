@@ -36,6 +36,7 @@ Once defined the polygons, set the desired polygon config file in ``` `rospack f
 ```bash
 roslaunch support_surface_saver support_surface_saver.launch save_images:=false set_use_sim_time:=false
 ```
+support_surface_saver requires the python Pillow, that can be installed with `pip install --target=$HOME/.local/lib/python2.7/site-packages/ --upgrade Pillow`.
 
 In rviz it is possible to check the support surfaces by visualising the topic `/support_surface/depth/image` with the DepthCloud plugin (showing them as point cloud).
 
@@ -43,7 +44,7 @@ In rviz it is possible to check the support surfaces by visualising the topic `/
 
 Make sure the robot is localised and collect the support surface data by running the command
 ```bash
-roslaunch mbot_benchmarking record_all_sensors.launch
+roslaunch mbot_benchmarking record_dataset.launch dataset_name:=test_support_surfaces
 ```
 These bags allow to extract the data again in case of problems.
 While recording, monitor the available disk space with the command `watch_df`.
@@ -52,13 +53,13 @@ These bags contain all sensors (e.g., images) of the robot, so they rapidly grow
 It is important to separate the support surface polygons in different files, because the support_surface_saver tool computes the support surfaces regardless of occlusions from the environment.
 So for example, support surfaces from another room would show up through a wall, and this is not desirable.
 
-Once recorded the bag, play them and run the support surface saver specifying save_images:=true and set_use_sim_time:=true to save the support surface data.
+Once recorded the bag, play them and run the support surface saver specifying `save_images:=true` and `set_use_sim_time:=true` to save the support surface data.
 ```bash
 rosbag play basic_sensors_2018-12-13-21-16-51.bag cameras_2018-12-13-21-16-51.bag --pause  --clock -r 0.5 # to play the bag 
 roslaunch support_surface_saver support_surface_saver.launch save_images:=true set_use_sim_time:=true
 ```
 
-The output of support_surface_saver are rgb image, depth images and pickled objects.
+The output of `support_surface_saver` are rgb image, depth images and pickled objects.
 The image files are only saved to visualise and visually select which files to keep (e.g., discard images with only a small area occupied by support surfaces), but are not used by other data augmentation tools.
 The pickled objects contain both the rgb images, the depth images, and additional information.
 These are the files read from the data_augmentation tool.
@@ -75,7 +76,7 @@ In order to collect images of many objects at the same time, it is very useful t
 
 To record such bags, make sure the robot is well localised and run the command
 ```bash
-roslaunch mbot_benchmarking record_all_sensors.launch
+roslaunch mbot_benchmarking record_dataset.launch dataset_name:=test_1
 ```
 Monitor the available disk space with the command `watch_df`.
 
@@ -96,7 +97,7 @@ class_name_2:
 This is easily done by using the camera plugin in rviz and publishing a point stamped on the image where the depth map is available.
 
 As an example, let's say the bags recorded with `mbot_bencmarking` are renamed to `basic_sensors_test_1.bag, cameras_test_1.bag`, where `test_1` is the name of the bag dataset.
-The reference_points file can be renamed to `objects_reference_points_test_1.yaml` with the same format so that it is recognised automatically in the image_saver launch file.
+The `reference_points` file can be renamed to `objects_reference_points_test_1.yaml` with the same format so that it is recognised automatically in the `image_saver` launch file.
 
  <!-- TODO  image: publishing point with rviz -->
 
@@ -108,7 +109,11 @@ To save the source images launch the image saver with the following parameters:
 ```bash
 roslaunch image_saver image_saver.launch image_folder_output:=~/source_images play_bags:=true dataset_bag_name:=test_1
 ```
-Set image_folder_output to the actual folder where source images should be saved, and dataset_bag_name to the actual name of the recorded bags, test_1 referring to the example name.
+Set `image_folder_output` to the actual folder where source images should be saved, `dataset_bag_name` and `dataset_path` to the same values used for `record_dataset.launch`.
+In this example, `dataset_bag_name:=test_1`.
+
+`image_saver` requires the imageio python library.
+To install the library use the command: `sudo pip install imageio`.
 
 
 ## Labeling the source images

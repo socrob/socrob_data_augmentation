@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # coding=utf-8
 
 from __future__ import print_function
@@ -11,6 +12,7 @@ from random import randint, choice
 import pickle
 from collections import defaultdict
 from geometry_msgs.msg import PointStamped
+# from typing import List, Any, Union
 
 import utils
 from support_surface_saver_ros import support_surface_object
@@ -51,6 +53,10 @@ class BackgroundImage:
 
 
 class SourceImage:
+
+    # Static values set from configuration
+    max_distance = None
+
     def __init__(self, filename, label_path, info_path, class_name_to_id, class_id_to_name):
         self.filename = filename
         self.image = imageio.imread(self.filename)
@@ -86,22 +92,27 @@ class SourceImage:
                 print("\tmissing reference point for labeled class %s" % class_name)
                 continue
 
-            self.patches.append(Patch(image_patch, mask_patch, class_id,
-                                      self.surface_normals_dict[class_name],
-                                      self.reference_points_dict[class_name]))
+            patch = Patch(self, image_patch, mask_patch, class_id,
+                          self.surface_normals_dict[class_name],
+                          self.reference_points_dict[class_name])
+
+            if patch.distance < SourceImage.max_distance:
+                self.patches.append(patch)
 
     def get_patches(self):
         return self.patches
 
 
 class Patch:
-    def __init__(self, image, mask, class_id, surface_normal, reference_point):
+    def __init__(self, source_image, image, mask, class_id, surface_normal, reference_point):
+        assert(isinstance(source_image, SourceImage))
         assert(isinstance(image, np.ndarray) and image.shape[2] == 3)
         assert(isinstance(mask, np.ndarray))
         assert(isinstance(class_id, int))
         assert(isinstance(reference_point, PointStamped))
 
         self.original = None
+        self.source_image = source_image
         self.image = image
         self.mask = mask
         self.class_id = class_id
@@ -146,16 +157,23 @@ class Patch:
         if not self.is_original():
             print("\n\n\n WARNING: copying non-original patch \n\n\n")
 
-        p = Patch(self.image.copy(), self.mask.copy(), self.class_id, self.surface_normal, self.reference_point)
+        p = Patch(self.source_image, self.image.copy(), self.mask.copy(), self.class_id, self.surface_normal, self.reference_point)
         p.usages = None
         p.original = self
         return p
 
 
 class AugmentedImage:
+
+    # Static values set from configuration
+    elevation_bucket_size = None
+    max_attempts = None
+    max_distance = None
+
     def __init__(self, background_image=None):
         assert(background_image is None or isinstance(background_image, BackgroundImage))
 
+        self.used_patches = list()
         self.background_image = None
         self.class_ids = list()
         self.boundingboxes = list()
@@ -163,10 +181,6 @@ class AugmentedImage:
         self.masks_union = None
 
         self.set_background_image(background_image)
-
-    # Static values set from configuration
-    elevation_bucket_size = None
-    max_attempts = None
 
     def set_background_image(self, background_image):
         if self.background_image is not None:
@@ -208,13 +222,16 @@ class AugmentedImage:
 
         # increase patch's usage statistics
         patch.increase_usages()
+        self.used_patches.append(patch)
 
     def find_valid_position(self, patches_by_elevation):
         assert(AugmentedImage.elevation_bucket_size is not None)
         assert(AugmentedImage.max_attempts is not None)
 
-        # support surface constraint: only place the patch with its bottom on the support surface
-        support_surface_constraint = np.logical_not(np.isnan(self.background_image.depth))
+        # support surface constraint: only place the patch with its bottom on the support surface,
+        # and where the depth is less than the maximum distance
+        support_surface_constraint = np.logical_and(np.logical_not(np.isnan(self.background_image.depth)),
+                                                    self.background_image.depth < AugmentedImage.max_distance)
 
         # occupancy constraint: do not consider positions already occupied by other patches
         occupancy_constraint = np.logical_not(self.masks_union)
@@ -225,6 +242,9 @@ class AugmentedImage:
         # i_mask is the array of indices where the constraints hold
         i_mask = np.array(np.where(constraints))
         num_choices = i_mask.shape[1]
+
+        if num_choices == 0:
+            raise NotFound("No depth values closer than max_distance")
 
         for _ in range(AugmentedImage.max_attempts):
             # choose a random index where to position the bottom of the patch (bottom in the image is max y)
@@ -247,6 +267,7 @@ class AugmentedImage:
             # randomly choose a patch from the list of patches with elevation closest to the point p (elevations are bucketed)
             elevation_buckets = np.array(patches_by_elevation.keys())
 
+            # if there are no patches with a compatible elevation then try another position
             if elevation_buckets.size == 0:
                 continue
 
@@ -337,6 +358,8 @@ class DataAugmentation:
         self.max_masks_per_image = config['max_masks_per_image']
         AugmentedImage.elevation_bucket_size = self.elevation_bucket_size = float(config['elevation_bucket_size'])
         AugmentedImage.max_attempts = config['max_attempts']
+        AugmentedImage.max_distance = config['max_distance']
+        SourceImage.max_distance = config['max_distance']
 
         self.load_pickled_patches = bool(config['load_pickled_patches'])
         assert(isinstance(self.load_pickled_patches, bool))
@@ -458,7 +481,10 @@ class DataAugmentation:
 
     def generate_dataset(self):
         i = 0
-        augmented_image_filename = lambda n: path.join(self.augmented_images_path, '%07i_augmented_image.png' % i)
+
+        def augmented_image_filename(n):
+            return path.join(self.augmented_images_path, '%07i_augmented_image.png' % n)
+        # augmented_image_filename = lambda n: path.join(self.augmented_images_path, '%07i_augmented_image.png' % i) # why i and not n?
 
         # load background images
         self.load_background_images()
@@ -517,6 +543,10 @@ class DataAugmentation:
                 "object " if num_objects == 1 else "objects",
                 ', '.join(map(lambda ci: self.class_id_to_name[ci],
                               sorted(augmented_image.class_ids)))))
+
+            print("\t\t\tUsed patches:")
+            for patch in augmented_image.used_patches:
+                print("\t\t\t\t", self.class_id_to_name[patch.class_id], "from source image", patch.source_image.filename)
 
         self.print_usage_statistics()
 
