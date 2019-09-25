@@ -1,6 +1,40 @@
 # Data Augmentation
 
- <!-- TODO  image: support surface depth image, support surface rgb image, source image, augmented image -->
+
+## Example images
+
+<p align="right">
+  <img src="/doc/img/augmented-image-0000167-erl_mk.png?raw=true" width="350" title="augmented image with ERL-MK objects">
+  <img src="/doc/img/augmented-image-0004143-erl_lis.png?raw=true" width="350" alt="augmented image with ERL-Lisbon objects">
+</p>
+<p align="right">
+ Augmented images
+</p>
+
+<p align="right">
+  <img src="/doc/img/polygonal-label-blue.png?raw=true" width="350" title="image with label">
+</p>
+<p align="right">
+ Image with label
+</p>
+
+<p align="right">
+  <img src="/doc/img/support-surface-rgb.png?raw=true" width="350" title="support surface rgb">
+  <img src="/doc/img/support-surface-depth.png?raw=true" width="350" title="support surface depthmap">
+</p>
+<p align="right">
+ Support surface images obtained by the support surface polygons (left: RGB, right: depth map)
+</p>
+
+## Augmentation pipeline
+
+<p align="right">
+  <img src="/doc/img/graph-data-augmentation.png?raw=true" width="350" title="augmentation pipeline">
+</p>
+<p align="right">
+ Augmentation pipeline
+</p>
+
 
 These data augmentation tools allow to automatically generate a dataset of objects by cut-and-past.
 The objects (patches) are "cut" from source images and pasted on background images, in specific positions.
